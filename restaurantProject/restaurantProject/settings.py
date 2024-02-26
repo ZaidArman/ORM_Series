@@ -116,6 +116,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# IP Address for Django_debug_toolbar
 INTERNAL_IPS = [
     # ...
     "127.0.0.1",
