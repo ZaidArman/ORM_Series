@@ -29,7 +29,7 @@ INSTALLED_APPS = [
     # Apps
     'django_extensions',
     'core',
-    'debug_toolbar',
+    'debug_toolbar', # for django_debug_toolbar
 ]
 
 MIDDLEWARE = [
