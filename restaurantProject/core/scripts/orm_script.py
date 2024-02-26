@@ -181,5 +181,5 @@ def run():
     # chinese = Restuarants.TypeChoices.CHINESE
     # sale = Sales.objects.filter(restuarant__restuarant_type=chinese)
     # print(sale)
-    # print(connection.queries)
-    pass
+    print(connection.queries)
+    # pass
