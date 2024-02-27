@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from core.models import Restuarants, Rating, Sales
 from django.utils import timezone
 from django.db import connection
+from django.db.models import F
 
 def run():
 # use to print the first element in the database
@@ -143,7 +144,7 @@ def run():
     # india = Restuarants.TypeChoices.INDIAN
     # china = Restuarants.TypeChoices.CHINESE
     
-    # in_lookup_check = [pakistan, india, china]
+# in_lookup_check = [pakistan, india, china]
     # restuarant = Restuarants.objects.filter(restuarant_type__in=in_lookup_check)
     # print(restuarant)
     # print(connection.queries)
@@ -170,6 +171,11 @@ def run():
 # ordered_by() with descending
     # restuarant = Restuarants.objects.order_by('name').reverse()
     # print(restuarant)
+    
+# ordered by random/custom ordered
+    # restaurants = Restuarants.objects.annotate(random_order=F('id') % 100).order_by('random_order')
+    # restaurants = Restuarants.objects.annotate(random_order=F('id') % 100).order_by('?')
+    # print(restaurants)
 
 # earliest ( return a single first value) & latest functions
     # restuarant = Restuarants.objects.earliest('date_opened')
@@ -182,4 +188,3 @@ def run():
     # sale = Sales.objects.filter(restuarant__restuarant_type=chinese)
     # print(sale)
     print(connection.queries)
-    # pass
