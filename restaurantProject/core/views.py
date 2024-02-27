@@ -50,9 +50,10 @@ def index(request):
         queryset=Sales.objects.filter(datetime__gte=month_ago)
     )
     restuarant = Restuarants.objects.prefetch_related('ratings', monthly_sales).filter(ratings__rating=5)
-    restuarant = restuarant.annotate(total=Sum('sales__income'))
+    restuarant = restuarant.annotate(total=Sum('sales__income')).order_by('total')
     print( [r.total for r in restuarant] )
-    return render(request, 'index.html')
+    context = {'restuarant':restuarant}
+    return render(request, 'index.html', context) 
 
     # if request.method == 'POST':
     #     form = restuarantForm(request.POST or None)

@@ -1,7 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
 
-    
+    <h1>Restaurant Sales</h1>
+        
+    <ul>
+        {% for r in restuarant %}
+        <li>
+            {{ r.name }} - Total Sales: {{ r.total }}
+        </li>
+        {% endfor %}
+    </ul>
 
 {% endblock content %}
     
