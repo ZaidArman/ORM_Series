@@ -1,8 +1,10 @@
 from django.contrib.auth.models import User
-from core.models import Restuarants, Rating, Sales
+from core.models import Restuarants, Rating, Sales, Staff, StaffRestuarant
 from django.utils import timezone
 from django.db import connection
-from django.db.models import F
+from django.db.models import F, Count, Avg, Min, Max, Sum
+from django.db.models.functions import Upper
+import random
 
 def run():
 # use to print the first element in the database
@@ -187,4 +189,122 @@ def run():
     # chinese = Restuarants.TypeChoices.CHINESE
     # sale = Sales.objects.filter(restuarant__restuarant_type=chinese)
     # print(sale)
-    print(connection.queries)
+    
+# Handling Many2Many Relationship from staff side
+    # staff, created = Staff.objects.get_or_create(staff_name='Zaid')
+    # print(staff)
+# Here we want to retrieve all the staff member that are working with restuarants
+# but it show zero, bcz we created but not associate with them
+    # print(staff.restuarant.all())
+    
+# add() # associate or add the element to the related model
+    # staff.restuarant.add(Restuarants.objects.first()) # Associate staff with restuarant
+    # print(staff.restuarant.all()) # now we associate it and it will show staff with restuarant
+
+# set(): will set the range of associate & count: will count
+    # staff.restuarant.set(Restuarants.objects.all()[:5])
+    # print(staff.restuarant.count()) # will count
+    
+# remove() # will remove only one associate
+    # staff.restuarant.remove(Restuarants.objects.first())
+    # print(staff.restuarant.count()) # will count
+    
+# clear()
+    # staff.restuarant.clear() # will clear all the associate object
+    # print(staff.restuarant.count()) # will count
+    
+# from restuarant Side
+    """
+        here we are going to create 1 staff with associate 2 different resturants
+    """
+    # staff, created = Staff.objects.get_or_create(staff_name='Kaabir Singh')
+    # restuarant = Restuarants.objects.first() # associate with first resturant (date_opened) ordered
+    # restuarant2 = Restuarants.objects.last() # associate with last restuarant (date-opened) ordered
+    
+    # StaffRestuarant.objects.create(
+    #     staff=staff, restuarant=restuarant, salary=28_000
+    # )
+    
+    # StaffRestuarant.objects.create(
+    #     staff=staff, restuarant=restuarant2, salary=40_000
+    # )
+
+# now try to checkout from staff side using through method
+    # staff, created = Staff.objects.get_or_create(staff_name='Kaabir Singh')
+    # staff.restuarant.clear() # clear old values
+    
+    # restuarant = Restuarants.objects.first()
+    # staff.restuarant.add(restuarant, through_defaults={'salary':90_000}) # associate and add salary
+    
+# if we want to associate with first 10 restuarants, 
+    # staff, created = Staff.objects.get_or_create(staff_name='Kaabir Singh')
+    # staff.restuarant.set(
+    #     Restuarants.objects.all()[0:10], 
+    #     through_defaults={'salary':random.randint(20_000, 10_000_0)}
+    #     )
+
+# values():
+    """
+        Returns a QuerySet that returns dictionaries, rather than model instances, when used as an iterable.
+        Each of those dictionaries represents an object, with the keys corresponding to the attribute names of model objects
+    """
+## will only return the dict of first row with name and date_opened
+    # restuarant = Restuarants.objects.values('name', 'date_opened').first() 
+    
+##  will return the queryset of all row with name and date_opened
+    # restuarant = Restuarants.objects.values('name', 'date_opened')
+
+# Transforming values with DB functions
+    # restuarant = Restuarants.objects.values(name_upper=Upper('name'))[:3]
+    # print(restuarant)
+    
+# Getting ForeingKey data with values()
+    # IT = Restuarants.TypeChoices.ITALIAN
+    # rating = Rating.objects.filter(restuarant__restuarant_type=IT).values('rating', 'restuarant__name')
+    # print(rating)
+    
+# values_list():
+    """
+        This is similar to values() except that instead of returning dictionaries, 
+        it returns tuples when iterated over. 
+        Each tuple contains the value from the respective field or 
+        expression passed into the values_list() call — so the first item is the first field, etc
+    """
+    # restuarant = Restuarants.objects.values_list('name', 'date_opened)
+    # restuarant = Restuarants.objects.values_list('name', flat=True) # flat use for returning list
+    # print(restuarant)
+    
+# aggregate function:
+    """
+        aggregate() is a terminal clause for a QuerySet that, when invoked, returns a dictionary of name-value pairs. 
+        The name is an identifier for the aggregate value; the value is the computed aggregate. 
+        The name is automatically generated from the name of the field and the aggregate function. 
+        If you want to manually specify a name for the aggregate value, 
+        you can do so by providing that name when you specify the aggregate clause.
+    """
+# suppose we want to achieve this
+    # restuarant = Restuarants.objects.filter(name__istartswith='c').count() 
+    # print(restuarant)
+# we can also do using aggregate
+    # restuarant = Restuarants.objects.aggregate(total_id=Count('id')) # total_id is just a name/ we can do without this name
+    # print(restuarant)
+
+# aggregate with Min & Max, Avg, Sum
+    # income_min_max = Sales.objects.aggregate(
+    #     minimum=Min('income'), 
+    #     maximum=Max('income'),
+    #     Average=Avg('income'),
+    #     total=Sum('income')
+    #     )
+    # print(income_min_max)
+    
+    # if we want to print the last month income of aggregating, then
+    one_month_sale = timezone.now() - timezone.timedelta(days=31)
+    sale = Sales.objects.filter(datetime__gte=one_month_sale)
+    income_min_max = sale.aggregate(
+        minimum=Min('income'), 
+        maximum=Max('income'),
+        Average=Avg('income'),
+        total=Sum('income')
+        )
+    print(income_min_max)

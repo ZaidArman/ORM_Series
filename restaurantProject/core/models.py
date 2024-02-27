@@ -40,7 +40,7 @@ class Restuarants(models.Model):
     
     class Meta:
         # here wo do by defualt ordering with lower case name
-        ordering = [Lower('name')]
+        ordering = [Lower('date_opened')]
         get_latest_by = 'date_opened' # by defualt show the last value ordered by date_opened
     
     def __str__(self):
@@ -50,6 +50,21 @@ class Restuarants(models.Model):
         print(self._state.adding)
         super().save(*args, **kwargs)
 
+class Staff(models.Model):
+    staff_name = models.CharField(max_length=100)
+    restuarant = models.ManyToManyField(Restuarants, through='StaffRestuarant')
+    
+    def __str__(self):
+        return self.staff_name
+    
+"""
+if we want to create a custom seperate table between Staff & Restuarant, 
+for that we can use Through method
+"""
+class StaffRestuarant(models.Model):
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
+    restuarant = models.ForeignKey(Restuarants, on_delete=models.CASCADE)
+    salary = models.FloatField(null=True)
 
 # Rating Model to store data about Rating of Costumers
 class Rating(models.Model):

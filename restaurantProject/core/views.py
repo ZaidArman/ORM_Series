@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .forms import restuarantForm
-from .models import Restuarants, Rating, Sales
+from .models import Restuarants, Rating, Sales, StaffRestuarant
 from django.db.models import Sum, Prefetch
 from django.utils import timezone
 # Create your views here.
@@ -44,16 +44,16 @@ def index(request):
         The Prefetch() object can be used to control the operation of prefetch_related().
         The lookup argument describes the relations to follow and works the same as the string based lookups passed to prefetch_related()
     """
-    month_ago = timezone.now() - timezone.timedelta(days=30)
-    monthly_sales = Prefetch(
-        'sales',
-        queryset=Sales.objects.filter(datetime__gte=month_ago)
-    )
-    restuarant = Restuarants.objects.prefetch_related('ratings', monthly_sales).filter(ratings__rating=5)
-    restuarant = restuarant.annotate(total=Sum('sales__income')).order_by('total')
-    print( [r.total for r in restuarant] )
-    context = {'restuarant':restuarant}
-    return render(request, 'index.html', context) 
+    # month_ago = timezone.now() - timezone.timedelta(days=30)
+    # monthly_sales = Prefetch(
+    #     'sales',
+    #     queryset=Sales.objects.filter(datetime__gte=month_ago)
+    # )
+    # restuarant = Restuarants.objects.prefetch_related('ratings', monthly_sales).filter(ratings__rating=5)
+    # restuarant = restuarant.annotate(total=Sum('sales__income')).order_by('total')
+    # print( [r.total for r in restuarant] )
+    # context = {'restuarant':restuarant}
+    # return render(request, 'index.html', context) 
 
     # if request.method == 'POST':
     #     form = restuarantForm(request.POST or None)
@@ -64,3 +64,11 @@ def index(request):
     #         return render(request, 'index.html', {'form': form})
     # context = {'form': restuarantForm()}
     # return render(request, 'index.html', context)
+    
+# here we use to check the prefetch_related() for query opt
+    # jobs = StaffRestuarant.objects.all() # this query will output about 21 query, which is high
+    jobs = StaffRestuarant.objects.prefetch_related('restuarant', 'staff') # only 3 query
+    for j in jobs:
+        print(j.restuarant.name)
+        print(j.staff.staff_name)
+    return render(request, 'index.html') 
