@@ -553,7 +553,7 @@ def run():
     The result is provided using the then keyword
     """
     
-    from django.db.models import Case, When
+    from django.db.models import Case, When, Value
     
     # italian = Restuarants.TypeChoices.ITALIAN
     # restuarant = Restuarants.objects.annotate(
@@ -583,4 +583,34 @@ def run():
     1- restuarant has average rating > 3.5 and
     2- resruarant has more then 1 rating
     """
-    """ firstly, annotate resturarant with average rating and number of ratings """
+    """ 1- annotate resturarant with average rating and number of ratings """
+    # restuarant = Restuarants.objects.annotate(
+    #     average = Avg('ratings__rating'),
+    #     no_ratings = Count('ratings__pk')
+    # )
+    # restuarant = restuarant.annotate(
+    #     hight_rated = Case(
+    #         When(average__gt=3.5, no_ratings__gt=1, then=True),
+    #         default=False
+    #     )
+    # )
+    # print(
+    #     # restuarant.filter(hight_rated=True) # Output:<QuerySet [<Restuarants: Pizzeria 1>]>
+    #     restuarant.filter(hight_rated=True).values('average', 'no_ratings') # Output: <QuerySet [{'average': 4.0, 'no_ratings': 4}]>
+    #     )
+    
+    """ Uses Multiple When() """
+    restuarant = Restuarants.objects.annotate(
+        average = Avg('ratings__rating'),
+        no_ratings = Count('ratings__pk')
+    )
+    restuarant = restuarant.annotate(
+        Rated_list = Case(
+            When(average__gt=3.5, then=Value("Highly Rated")),
+            When(average__range=(2.5, 3.5), then=Value('Average Rated')),
+            When(average__lt=2.0, then=Value('Bad Rating'))
+        )
+    )
+    print(
+        restuarant.filter(Rated_list='Average Rated')
+    )
