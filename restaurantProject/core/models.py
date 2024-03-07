@@ -40,6 +40,9 @@ class Restuarants(models.Model):
         validators = [MinValueValidator(-180), MaxValueValidator(180)]
     )
     restuarant_type = models.CharField(max_length=3, choices=TypeChoices.choices)
+    # for handling Null Values in DB
+    capacity = models.PositiveSmallIntegerField(null=True, blank=True)
+    nickname = models.CharField(max_length=200, null=True, blank=True)
     
     class Meta:
         """ here wo do by defualt ordering with lower case name """
@@ -88,5 +91,6 @@ class Rating(models.Model):
 class Sales(models.Model):
     restuarant = models.ForeignKey(Restuarants, on_delete=models.SET_NULL, null=True, related_name='sales')
     income = models.DecimalField(max_digits=10, decimal_places=2)
+    expendature = models.DecimalField(max_digits=10, decimal_places=2)
     datetime = models.DateTimeField()
     

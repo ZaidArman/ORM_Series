@@ -2,8 +2,8 @@ from django.contrib.auth.models import User
 from core.models import Restuarants, Rating, Sales, Staff, StaffRestuarant
 from django.utils import timezone
 from django.db import connection
-from django.db.models import F, Count, Avg, Min, Max, Sum
-from django.db.models.functions import Upper
+from django.db.models import F, Count, Avg, Min, Max, Sum, Value, CharField, F, Q
+from django.db.models.functions import Upper, Length, Concat
 import random
 
 def run():
@@ -295,12 +295,292 @@ def run():
     # print(income_min_max)
     
     """ if we want to print the last month income of aggregating, then """
-    one_month_sale = timezone.now() - timezone.timedelta(days=31)
-    sale = Sales.objects.filter(datetime__gte=one_month_sale)
-    income_min_max = sale.aggregate(
-        minimum=Min('income'),
-        maximum=Max('income'),
-        Average=Avg('income'),
-        total=Sum('income')
-        )
-    print(income_min_max)
+    # one_month_sale = timezone.now() - timezone.timedelta(days=31)
+    # sale = Sales.objects.filter(datetime__gte=one_month_sale)
+    # income_min_max = sale.aggregate(
+    #     minimum=Min('income'),
+    #     maximum=Max('income'),
+    #     Average=Avg('income'),
+    #     total=Sum('income')
+    #     )
+    # print(income_min_max)
+    
+    
+    """ 28 / 02 / 2024
+    Annotate():
+    Per-object summaries can be generated using the annotate() clause. When an annotate() clause is specified, 
+    each object in the QuerySet will be annotated with the specified values.
+    """
+    # ToDo:
+    """
+    Fetch all restuarants, and let's assume, if we want to retrieve the number of characters in the name of restuarant
+    """
+    # restuarant = Restuarants.objects.annotate(name_len=Length('name')).filter(name_len__gte=10) # print name that length greater than 10
+    # print(restuarant.values('name', 'name_len')) # number of character of the restuarant using annotate
+    
+    """
+    if we want to print the name of restuarants with ratings: like thi
+    "Restuarant1 [Rating: 3.5]" so let's do it!
+    """
+    # concatenation = Concat(
+    #     'name',
+    #     Value(' [Rating: '),
+    #     Avg('ratings__rating'),
+    #     Value(']'), # already import:- from django.db.models import Value
+    #     output_field = CharField() # already import:- from django.db.models import CharField
+    #     )
+    # restuarant = Restuarants.objects.annotate(message=concatenation)
+    # for r in restuarant:
+    #     print(r.message)
+    
+    """
+    if we want to print the sales(incomee) of the restuarants using annotate
+    """
+    # restuarant = Restuarants.objects.annotate(total_sale=Sum('sales__income'))
+    # restaurant = [{'name': r.name, 'total_sale': r.total_sale} for r in restuarant]
+    # print(restaurant)
+    
+    # restuarant = Restuarants.objects.annotate(total_sale=Sum('sales__income')).order_by('total_sale').filter(total_sale__lt=400)
+    # for r in restuarant:
+    #     print(r.total_sale)
+    
+    """ To use aggregate on the annotate values """
+    # restuarant = Restuarants.objects.annotate(total_sale=Sum('sales__income')).order_by('total_sale').filter(total_sale__lt=400)
+    # print(restuarant.aggregate(average_sale=Avg('total_sale')))
+    
+    """
+    now if we want to fetch the number for ratings and averae_ratings for restuarants using annotate
+    """
+    # restuarant = Restuarants.objects.annotate(
+    #     num_ratings=Count('ratings'),
+    #     average_rating=Avg('ratings__rating')
+    #     )
+    # print(restuarant.values('name', 'num_ratings', 'average_rating'))
+    """ Print the ratings based on Restuarant types (grouping) """
+    # restuarant = Restuarants.objects.values('restuarant_type').annotate(
+    #     num_ratings=Count('ratings')
+    #     )
+    # print(restuarant)
+    
+
+    """ F() Object:
+    An F() object represents the value of a model field, transformed value of a model field, or annotated column. 
+    It makes it possible to refer to model field values and perform database operations using them without actually having to pull them out of the database into Python memory.
+    Instead, Django uses the F() object to generate an SQL expression that describes the required operation at the database level.
+    """
+    # let's see the example
+    # rating = Rating.objects.filter(rating=3).all()
+    # print(rating) # Output: 3
+    """ if we want to update the rating +1, then """
+    """ one-way in python using Increment way """
+    # rating.rating += 1
+    """ instead of increment we can use F() """
+    # rating = F('rating') + 1 # it will add value of 1
+    # print(rating) # Output: 4
+    
+    """ If we want to update the ratings from 5 start to 10, we can do using F() """
+    # Rating.objects.update(rating=F('rating') / 2) # using / we can back to original ratings
+    # print(connection.queries)
+    
+    # sale = Sales.objects.all()
+    # for s in sale:
+    #     s.expendature = random.uniform(5, 100)
+    """ Update in bulk¶
+    When updating objects, where possible, use the bulk_update() method to reduce the number of SQL queries. Given a list or queryset of objects: 
+    """
+    # Sales.objects.bulk_update(sale, ['expendature'])
+    
+    """ using F() with filter method """
+    # sale = Sales.objects.filter(expendature__gt=F('income'))
+    # print(sale)
+    # print(connection.queries)
+    
+    """ using F() with annotate method 
+    If we want to check the profit from income of sales for the restuarants
+    """
+    # sale = Sales.objects.annotate(profit = F('income') - F('expendature')).order_by('profit')
+    # print(sale.last().profit) # print the last restuarant profit from sales
+    
+    """
+    If we want to print the profit and loss of a restuarant using aggregate with Count, Q, F objects
+    """
+    # sale = Sales.objects.aggregate(
+    #     profit = Count('id', filter=Q(income__gt=F('expendature'))),
+    #     loss = Count('id', filter=Q(income__lt=F('expendature')))
+    #     )
+    # print(sale)
+    
+    """ refresh_from_db() : CombinedExpresion """
+    # rating = Rating.objects.first()
+    # print(type(rating))
+    # print(type(Rating.objects.all()))
+    # print(rating.rating)
+    # rating.rating = F('rating') + 1
+    # rating.save()
+    # print(type(rating.rating)) # this output will show the CombinedExpression
+    # rating.refresh_from_db() # this function refresh the db and update the value
+    # print(rating.rating)
+    
+    
+    # rating = rating.objects.all()
+    # print(rating.rating)
+    # rating.rating = F('rating') + 1
+    # rating.save()
+    # print(rating.rating) 
+    
+    """ Q() Object
+    Keyword argument queries – in filter(), etc. – are “AND”ed together. 
+    If you need to execute more complex queries (for example, queries with OR statements), you can use Q objects.
+    A Q() object (django.db.models.Q) is an object used to encapsulate a collection of keyword arguments. 
+    These keyword arguments are specified as in “Field lookups” above.
+    
+    Q objects can be combined using the &, |, and ^ operators. When an operator is used on two Q objects, it yields a new Q object.
+    For example, this statement yields a single Q object that represents the “OR” of two "question__startswith" queries:
+    """
+    
+    """ here if we want to print IND OR CHI restuarant """
+    # IND = Restuarants.TypeChoices.INDIAN
+    # CHI = Restuarants.TypeChoices.CHINESE
+    # restuarant = Restuarants.objects.filter(
+    #     Q(restuarant_type=IND) | # | is OR Operator
+    #     Q(restuarant_type=CHI)
+    # )
+    # print(restuarant)
+    
+    """ a single queryset show "like" in SQL """
+    # restuarant = Restuarants.objects.filter(
+    #     name__icontains='1'
+    # )
+    # restuarant2 = Restuarants.objects.filter(
+    #     name__iendswith='1'
+    # )
+    # print(restuarant, restuarant2)
+    
+    """ if we want to check the name contain indian or name contain chinese """
+    # restuarant = Restuarants.objects.filter(
+    #     Q(name__icontains="Indian") | Q(name__icontains="Chinese")
+    # )
+    # for r in restuarant:
+    #     print(r.name)
+    
+    """ we can also use complex query like this with Q object """
+    # IND_OR_CHI = Q(name__icontains="Indian") | Q(name__icontains="Chinese")
+    # recent_opened = Q(date_opened__gt=timezone.now() - timezone.timedelta(days=40))
+    # not_recent_opened = ~Q(date_opened__gt=timezone.now() - timezone.timedelta(days=40)) # using Not
+    
+    # restuarant = Restuarants.objects.filter( IND_OR_CHI | not_recent_opened )
+    # print(restuarant)
+    
+    """ We want to find all sales, Where;
+        - profit is greater than expendature OR
+        - restuarant name contain a number
+    """
+    # name_has_num = Q(restuarant__name__regex=r"[0-9]+")
+    # profited = Q(income__gt=F('expendature'))
+    # sales = Sales.objects.filter(name_has_num | profited)
+    # for s in sales:
+    #     if s.income <= s.expendature:
+    #         print(s.restuarant.name)
+    
+    """ We can also more examples like this """
+    # name_has_num = Q(restuarant__name__regex=r"[0-9]+")
+    # profited = Q(income__gt=F('expendature'))
+    # sales = Sales.objects.filter(name_has_num | profited) # OR Operator
+    # sales2 = Sales.objects.select_related('restuarant').filter(name_has_num & profited) # AND Operator
+    
+    # print(sales.count(), sales2.count())
+    
+    """
+    Handling null values
+    """
+    # restuarant1 = Restuarants.objects.first()
+    # restuarant2 = Restuarants.objects.last()
+    # restuarant1.capacity = 10 # adding capacity to the first row
+    # restuarant2.capacity = 20 # adding capacity to the last row
+    # restuarant1.save()
+    # restuarant2.save()
+    # null_handling = Restuarants.objects.filter(capacity__isnull=False).count()
+    # print(null_handling)
+    
+    """ Ordering by Capacity with Null Values """
+    # null_handling = Restuarants.objects.order_by('capacity').values('capacity')
+    # print(null_handling)
+    """ Sort null values using F() """
+    # null_handling = Restuarants.objects.order_by(F('capacity').asc(nulls_last=True)).values('capacity')
+    # print(null_handling) 
+    """ Output:
+    <QuerySet [{'capacity': 10}, {'capacity': 20}, {'capacity': None}, {'capacity': None}, {'capacity': None}, {'capacity': None}, {'capacity': None}, {'capacity': None}, {'capacity': None}, {'capacity': None}]>
+    """
+    """ only print null values with desc order """
+    # null_handling = Restuarants.objects.filter(capacity__isnull=False).order_by('-capacity').values('capacity')
+    # print(null_handling)
+
+    """ Coalesce(*expressions, **extra) 
+    Accepts a list of at least two field names or expressions and returns the first non-null value 
+    (note that an empty string is not considered a null value). Each argument must be of a similar type, 
+    so mixing text and numbers will result in a database error.
+    """
+    from django.db.models.functions import Coalesce
+    # print(
+    #     # Restuarants.objects.aggregate(total_capacity=Sum('capacity')) # {'total_capacity': None}
+    #     # Restuarants.objects.aggregate(total_capacity=Coalesce(Sum('capacity'), 0)) # {'total_capacity': 0}
+    #     # """ Let's check for rating model """
+    #     # Rating.objects.filter(rating__lt=0).aggregate(total_Avg_capacity=Avg('rating', default=0.0)) # {'total_Avg_capacity': None} using default output will be: {'total_Avg_capacity': 0.0}
+    #     Rating.objects.filter(rating__lt=0).aggregate(total_Avg_capacity=Coalesce(Avg('rating'), 0.0)) # {'total_Avg_capacity': 0.0}
+    # )
+    """ Example of Coalesce () """
+    # r = Restuarants.objects.first()
+    # r.nickname = 'Arman'
+    # r.save()
+    # print(
+    #     Restuarants.objects.annotate(
+    #         name_value = Coalesce( F('nickname'), F('name') )     
+    #     ).values('name_value')
+    # )
+    
+    """ Conditional Expression (Case, When) in ORM """
+    """ Case(*cases, **extra)
+    A Case() expression is like the if … elif … else statement in Python. 
+    Each condition in the provided When() objects is evaluated in order, 
+    until one evaluates to a truthful value. The result expression from the 
+    matching When() object is returned.
+    """    
+    """ When(condition=None, then=None, **lookups) 
+    A When() object is used to encapsulate a condition and its result for use in the 
+    conditional expression. Using a When() object is similar to using the filter() method. 
+    The condition can be specified using field lookups, Q objects, or 
+    Expression objects that have an output_field that is a BooleanField. 
+    The result is provided using the then keyword
+    """
+    
+    from django.db.models import Case, When
+    
+    # italian = Restuarants.TypeChoices.ITALIAN
+    # restuarant = Restuarants.objects.annotate(
+    #     is_italian = Case(
+    #         When(restuarant_type=italian, then=True),
+    #         default=False
+    #     )
+    # )
+    # print(
+    #     restuarant.filter(is_italian=True)
+    # )
+    
+    """ Lets see another example for sales model """
+    # restuarant = Restuarants.objects.annotate(no_sales=Count('sales'))
+    # restuarant = restuarant.annotate(
+    #     is_popular = Case(
+    #         When(no_sales__gt=8, then=True),
+    #         default=False
+    #     )
+    # )
+    # print(
+    #     restuarant.values('no_sales', 'is_popular'), " \n\n No of Sales are greater then 8: ",
+    #     restuarant.filter( is_popular=True)
+    # )
+    
+    """ Example:
+    1- restuarant has average rating > 3.5 and
+    2- resruarant has more then 1 rating
+    """
+    """ firstly, annotate resturarant with average rating and number of ratings """
