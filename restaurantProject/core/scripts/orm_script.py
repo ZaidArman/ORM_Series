@@ -5,6 +5,8 @@ from django.db import connection
 from django.db.models import F, Count, Avg, Min, Max, Sum, Value, CharField, F, Q
 from django.db.models.functions import Upper, Length, Concat
 import random
+import itertools
+from itertools import count
 
 def run():
     """ use to print the first element in the database """
@@ -600,17 +602,136 @@ def run():
     #     )
     
     """ Uses Multiple When() """
-    restuarant = Restuarants.objects.annotate(
-        average = Avg('ratings__rating'),
-        no_ratings = Count('ratings__pk')
-    )
-    restuarant = restuarant.annotate(
-        Rated_list = Case(
-            When(average__gt=3.5, then=Value("Highly Rated")),
-            When(average__range=(2.5, 3.5), then=Value('Average Rated')),
-            When(average__lt=2.0, then=Value('Bad Rating'))
-        )
-    )
-    print(
-        restuarant.filter(Rated_list='Average Rated')
-    )
+    # restuarant = Restuarants.objects.annotate(
+    #     average = Avg('ratings__rating'),
+    #     no_ratings = Count('ratings__pk')
+    # )
+    # restuarant = restuarant.annotate(
+    #     Rated_list = Case(
+    #         When(average__gt=3.5, then=Value("Highly Rated")),
+    #         When(average__range=(2.5, 3.5), then=Value('Average Rated')),
+    #         When(average__lt=2.0, then=Value('Bad Rating'))
+    #     )
+    # )
+    # print(
+    #     restuarant.filter(Rated_list='Average Rated')
+    # )
+    
+    """ Sol: Assign continent to each Restuarant """
+    # restuarant = Restuarants.objects.annotate(
+    #     continent = Case(
+    #         When( Q(restuarant_type=Restuarants.TypeChoices.INDIAN) | Q( restuarant_type=Restuarants.TypeChoices.CHINESE) | Q( restuarant_type=Restuarants.TypeChoices.ARABIAN), then=Value('Asia')),
+    #         When(restuarant_type=Restuarants.TypeChoices.ITALIAN, then=Value('Europe')),
+    #         default=Value('N/A')
+    #     )
+    # )
+    # restuarant = restuarant.filter(continent='Asia')
+    # print(restuarant)
+    
+    """ Complex Example:
+    Let's see another example that aggregate total sales over each 10-day period, starting from the first sale up until last
+    """
+    # first_sale = Sales.objects.aggregate(first_sale_date=Min('datetime'))['first_sale_date']
+    # last_sale = Sales.objects.aggregate(last_sale_date=Max('datetime'))['last_sale_date']
+    
+    """ Generate a list of dates each 10-days apart """
+    # dates = []
+    # count = itertools.count() # imported above
+    
+    # while( dt := first_sale + timezone.timedelta(days=10*next(count))) <= last_sale:
+    #     dates.append(dt)
+    
+    # whens = [ # for When object
+    #     When(datetime__range=(dt, dt+timezone.timedelta(days=10)), then=Value(dt.date()))
+    #     for dt in dates
+    # ]
+    
+    # cases = Case( # for Case Object
+    #     *whens,
+    #     output_field=CharField()
+    # )
+    
+    # sales= Sales.objects.annotate( # Annotate all income sales
+    #     daterange=cases
+    # ).values('daterange').annotate(total_sale=Sum('income'))
+    # print(sales)
+    
+    """ Sub-Query:
+    Subquery(queryset, output_field=None)
+    You can add an explicit subquery to a QuerySet using the Subquery expression.
+    
+    OuterRef(field)
+    Use OuterRef when a queryset in a Subquery needs to refer to a field from the outer query or its transform. It acts like an F expression except that the check to see if it refers to a valid field isn’t made until the outer queryset is resolved.
+    Instances of OuterRef may be used in conjunction with nested instances of Subquery to refer to a containing queryset that isn’t the immediate parent.
+    """
+    # SQL Code:
+    """ 
+    SELECT * FROM core_sales 
+    WHERE restuarant_id IN 
+	(SELECT id FROM core_restuarants WHERE restuarant_type in ('ITA', 'CHI')) # len of query = 80
+    """
+    # Python/Django Code
+    from django.db.models import OuterRef, Subquery
+    
+    # sales = Sales.objects.filter(restuarant__restuarant_type__in=['ITA', 'CHI'])
+    # print(len(sales)) # len of the query = 80
+    """ Now if we want to check either this query contain restuarant Italian, China or not"""
+    # sales = sales.values_list('restuarant__restuarant_type').distinct()
+    # print(sales) # Output: <QuerySet [('ITA',), ('CHI',)]>
+    
+    """ The above example, is not the best way, so we can also do using subquery"""
+    # restuarants = Restuarants.objects.filter(restuarant_type__in=['ITA', 'CHI'])
+    # sales = Sales.objects.filter(restuarant__in=Subquery(restuarants.values('pk')))
+    # print(len(sales)) # # len of the query = 80
+    
+    
+    """ SQL Query:
+    SELECT id, name, restuarant_type, 
+	(SELECT income FROM core_sales 
+	WHERE restuarant_id = core_restuarants.id
+	ORDER BY datetime DESC
+	LIMIT 1 ) as last_sale
+    FROM core_restuarants
+    """
+    
+    """ Python Django Query """
+    # restuarant = Restuarants.objects.all()
+    """ annotate restuarant with the income generated from MOST RECENT Sale """
+    # sale = Sales.objects.filter(restuarant=OuterRef('pk')).order_by('-datetime')
+    """ Outer Query """
+    # restuarant =restuarant.annotate(
+    #     last_sale_income = Subquery(sale.values('income')[:1]),
+    #     # Add some modification
+    #     last_sale_expendature = Subquery(sale.values('expendature')[:1]),
+    #     profit = F('last_sale_income') - F('last_sale_expendature'),
+    # )
+    # for r in restuarant:
+    #     print(f"{r.pk} - {r.last_sale_income} - {r.last_sale_expendature} - {r.profit}")
+    
+    """ 
+    class Exists(queryset)
+    Exists is a Subquery subclass that uses an SQL EXISTS statement. 
+    In many cases it will perform better than a subquery since the database is able to stop evaluation of the subquery when a first matching row is found.
+    """
+    from django.db.models import Exists
+    """ 
+    Example: 
+    Filter the restuarant that have any sale with income > 85 
+    """
+    # restuarant = Restuarants.objects.filter(
+    #     Exists(Sales.objects.filter(restuarant=OuterRef('pk'), income__gt=85))
+    # )
+    # print(restuarant.count()) # Output: 7
+    
+    """ Let see an another example that print the rating of restuarant that get 5 starts """
+    # restuarant = Restuarants.objects.filter(
+    #     ~Exists(Rating.objects.filter(restuarant=OuterRef('pk'), rating=5)) # not exists
+    # )
+    # print(restuarant.count()) # Output: 3
+    
+    """ Let's See an another example that print the all restuarant with sales in last five days """
+    # fifteen_days_ago = timezone.now() - timezone.timedelta(days=15)
+    # sales = Sales.objects.filter(restuarant=OuterRef('pk'), datetime__gte=fifteen_days_ago) 
+    
+    # restuarant = Restuarants.objects.filter(Exists(sales))
+    # print(restuarant)

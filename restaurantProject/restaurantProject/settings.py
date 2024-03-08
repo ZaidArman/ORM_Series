@@ -41,6 +41,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'middlewares.IPS_middleware.BlockIPSMiddleware',
 ]
 
 ROOT_URLCONF = 'restaurantProject.urls'
@@ -123,3 +124,9 @@ INTERNAL_IPS = [
     # ...
 ]
 
+# use for middleware to block IPSs
+BLOCKED_IPS = [
+    # ...
+    "127.0.0.1",
+    # ...
+]
