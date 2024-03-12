@@ -1,3 +1,4 @@
+from typing import Any
 from django.db import models
 from django.contrib.auth.models import User # will use the Build-In Model
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -44,10 +45,10 @@ class Restuarants(models.Model):
     capacity = models.PositiveSmallIntegerField(null=True, blank=True)
     nickname = models.CharField(max_length=200, null=True, blank=True)
     
-    class Meta:
-        """ here wo do by defualt ordering with lower case name """
-        ordering = [Lower('date_opened')]
-        get_latest_by = 'date_opened' # by defualt show the last value ordered by date_opened
+    # class Meta:
+    #     """ here wo do by defualt ordering with lower case name """
+    #     ordering = [Lower('date_opened')]
+    #     get_latest_by = 'date_opened' # by defualt show the last value ordered by date_opened
     
     def __str__(self):
         return self.name
@@ -94,3 +95,22 @@ class Sales(models.Model):
     expendature = models.DecimalField(max_digits=10, decimal_places=2)
     datetime = models.DateTimeField()
     
+
+""" Database Transactions:
+    Now we going to working on Database Transactions, for that we are going to create the bellow models 
+"""
+
+class Product(models.Model):
+    product_name = models.CharField(max_length=100)
+    number_in_stock = models.PositiveSmallIntegerField()
+    
+    def __str__(self):
+        return self.product_name
+    
+class Order(models.Model):
+    product_order = models.ForeignKey(Product, on_delete=models.CASCADE)
+    number_of_items = models.PositiveSmallIntegerField()
+    # user
+    
+    def __str__(self) -> str:
+        return f"{self.number_of_items} x {self.product_order.product_name}"

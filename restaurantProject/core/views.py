@@ -1,12 +1,17 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .forms import restuarantForm
-from .models import Restuarants, Rating, Sales, StaffRestuarant
+from .models import Restuarants, Rating, Sales, StaffRestuarant, Product, Order
 from django.db.models import Sum, Prefetch
+from django.db import transaction
 from django.utils import timezone
+import sys
+from functools import partial # use to send email manually for testing
+
+# calling the form
+from core.forms import ProductOrderForm
 # Create your views here.
 
 def index(request):
-    
 # SQL Query Optimization using prefetch_related():
     """
         prefetch_related(lookups)
@@ -72,3 +77,44 @@ def index(request):
         print(j.restuarant.name)
         print(j.staff.staff_name)
     return render(request, 'index.html') 
+
+
+""" testing email function to test our commit """
+def User_Welcome_Email(email):
+    print(f" Dear {email}, Thank You for Your Order! ")
+
+def ProductOrderView(request):
+    if request.method == 'POST':
+        form = ProductOrderForm(request.POST)
+        if form.is_valid():
+            
+            with transaction.atomic():
+                """ To solve the concurrent problem , we use select_for_update() 
+                
+                select_for_update(nowait=False, skip_locked=False, of=(), no_key=False)
+                Returns a queryset that will lock rows until the end of the transaction, 
+                generating a SELECT ... FOR UPDATE SQL statement on supported databases.
+                """
+                product = Product.objects.select_for_update().get(
+                    id=form.cleaned_data['product_order'].pk
+                )
+                
+                order = form.save()
+                # """
+                # if we save the form and the system crash the below code will not execute and 
+                # db will not be update, for that purpose we use ATOMICITY / Transactions
+                # """
+
+                # sys.exit(1) # Testing: if system crash it will rollback the db
+                order.product_order.number_in_stock -= order.number_of_items 
+                order.product_order.save() #product_order is the ForeignKey of Order table
+            transaction.on_commit(partial(User_Welcome_Email, "zaidtesting@test.com")) # To test either our commit work or not
+            
+            return redirect('product_order')
+        else:
+            context = {'form': form}
+            return render(request, 'order.html', context)
+            
+    form = ProductOrderForm()
+    context = {'form': form}
+    return render(request, 'order.html', context)

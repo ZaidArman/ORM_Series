@@ -70,8 +70,15 @@ WSGI_APPLICATION = 'restaurantProject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
+        
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'orm_series',
+        'USER': 'postgres',
+        'PASSWORD': 'admin',
+        'HOST': 'localhost',  # or your PostgreSQL server address
+        'PORT': '5432',       # or your PostgreSQL server port
     }
 }
 
@@ -125,8 +132,8 @@ INTERNAL_IPS = [
 ]
 
 # use for middleware to block IPSs
-BLOCKED_IPS = [
-    # ...
-    "127.0.0.1",
-    # ...
-]
+# BLOCKED_IPS = [
+#     # ...
+#     "127.0.0.1",
+#     # ...
+# ]
