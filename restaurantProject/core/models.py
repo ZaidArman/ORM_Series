@@ -1,6 +1,8 @@
 from typing import Any
 from django.db import models
 from django.contrib.auth.models import User # will use the Build-In Model
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.db.models.functions import Lower
@@ -114,3 +116,10 @@ class Order(models.Model):
     
     def __str__(self) -> str:
         return f"{self.number_of_items} x {self.product_order.product_name}"
+    
+# for GenericForeingKey
+class Comment(models.Model):
+    comment_text = models.TextField()
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")

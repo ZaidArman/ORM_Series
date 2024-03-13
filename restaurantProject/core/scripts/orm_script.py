@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from core.models import Restuarants, Rating, Sales, Staff, StaffRestuarant
+from core.models import Restuarants, Rating, Sales, Staff, StaffRestuarant, Comment
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.db import connection
@@ -783,7 +783,27 @@ def run():
     get_for_model(model, for_concrete_model=True)
     Takes either a model class or an instance of a model, and returns the ContentType instance representing that model. for_concrete_model=False allows fetching the ContentType of a proxy model 
     """
-    content_type_rating = ContentType.objects.get_for_model(Rating)
-    print(content_type_rating.app_label) # core
-    c = content_type_rating.model_class()
-    print(c) # <class 'core.models.Rating'>
+    # content_type_rating = ContentType.objects.get_for_model(Rating)
+    # print(content_type_rating.app_label) # core
+    # c = content_type_rating.model_class()
+    # print(c) # <class 'core.models.Rating'>
+    
+    """ GenericForeingKey """
+    # comments = Comment.objects.all()
+    # for con in comments:
+    #     print(con.content_object)
+    #     print(type(con.content_object))
+        
+    """Outputs: 
+        Bombay Bustle   type: <class 'core.models.Restuarants'>
+        Rating 4        type: <class 'core.models.Rating'>
+        """
+    
+    """ Another Example """
+    comment = Comment.objects.first()
+    ctype = comment.content_type # get the store content_type
+    print(ctype) # Output: Core | restuarants
+    # from the content type, fetch the associate generic FK instance
+    model = ctype.get_object_for_this_type(pk=comment.object_id)
+    print(model) # Output: Bombay Bustle
+    print(type(model)) # Output: <class 'core.models.Restuarants'>
