@@ -63,6 +63,20 @@ Each topic is accompanied by example code and explanations to help you understan
 4. Access the application in your web browser at
   $ http://localhost:8000
 
+## Topics Covered
+   The tutorial covers the following topics:
+   
+  - Basic CRUD operations with Django models
+   - Model relationships (OneToOne, ForeignKey, ManyToMany)
+   - Queryset operations (filtering, ordering, aggregations)
+   - Advanced queryset operations (annotate, prefetch_related, select_related)
+   - Transactions and atomicity
+   - Subquery, OuterRef and Exit
+   - select_for_update() function
+   - Django ContentType framework
+   - GenericForeingKey 
+   - and more...
+
 ## Contributing
 Contributions to this project are welcome! If you find any issues or have suggestions for improvements, feel free to open an issue or submit a pull request.
 
