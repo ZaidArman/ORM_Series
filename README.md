@@ -16,8 +16,6 @@ This repository contains the code for a Django project that covers various topic
 
 This Django project serves as a comprehensive tutorial for learning Django ORM. It covers a wide range of topics starting from basic CRUD operations to more advanced concepts such as model relationships, queryset optimization, transactions, and more with SQLite3 and PostgreSQL.
 
-Each topic is accompanied by example code and explanations to help you understand the concepts thoroughly.
-
 ## Features
 
 - Basic CRUD operations with Django models
@@ -66,7 +64,7 @@ Each topic is accompanied by example code and explanations to help you understan
 
 4. Access the application in your web browser at
    
-  $ http://localhost:8000
+     $ http://localhost:8000
 
 ## Topics Covered
    The tutorial covers the following topics:
@@ -81,6 +79,8 @@ Each topic is accompanied by example code and explanations to help you understan
    - Django ContentType framework
    - GenericForeingKey 
    - and more...
+
+Each topic is accompanied by example code and explanations to help you understand the concepts thoroughly.
 
 ## Contributing
 Contributions to this project are welcome! If you find any issues or have suggestions for improvements, feel free to open an issue or submit a pull request.
