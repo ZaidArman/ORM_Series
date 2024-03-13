@@ -34,33 +34,38 @@ Each topic is accompanied by example code and explanations to help you understan
 ## Installation
 
 1. Clone the repository to your local machine:
-
+   
    ```bash
    $ git clone https://github.com/ZaidArman/ORM_Series.git
    ```
 
-2. Install the dependencies using pip:
+3. Install the dependencies using pip:
+   
   ```bash
     $ pip install -r requirements.txt
   ```
 
 ## Usage
 1. Navigate to the project directory:
+   
   ```bash
     $ cd orm_series
   ```
 
 2. Activate Virual Enviroment:
+   
   ```bash
-  # orm_venv\scripts\activate
+     $ orm_venv\scripts\activate
   ```
 
 3. Run the Django development server:
+   
   ```bash
    $ python manage.py runserver
   ```
 
 4. Access the application in your web browser at
+   
   $ http://localhost:8000
 
 ## Topics Covered
