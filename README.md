@@ -26,7 +26,8 @@ This Django project serves as a comprehensive tutorial for learning Django ORM. 
 - Subquery, OuterRef and Exit
 - select_for_update() function
 - Django ContentType framework
-- GenericForeingKey 
+- GenericForeingKey
+- Database constraints, unique constraints & check constraints
 - and more...
 
 ## Installation
@@ -77,7 +78,8 @@ This Django project serves as a comprehensive tutorial for learning Django ORM. 
    - Subquery, OuterRef and Exit
    - select_for_update() function
    - Django ContentType framework
-   - GenericForeingKey 
+   - GenericForeingKey
+   - Database constraints, unique constraints & check constraints
    - and more...
 
 Each topic is accompanied by example code and explanations to help you understand the concepts thoroughly.
