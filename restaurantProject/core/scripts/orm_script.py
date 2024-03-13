@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from core.models import Restuarants, Rating, Sales, Staff, StaffRestuarant
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.db import connection
 from django.db.models import F, Count, Avg, Min, Max, Sum, Value, CharField, F, Q
@@ -735,3 +736,54 @@ def run():
     
     # restuarant = Restuarants.objects.filter(Exists(sales))
     # print(restuarant)
+    
+    """
+    Django ContentType Framework
+    """
+    # content_type = ContentType.objects.all()
+    # print(content_type) # print all the data 
+    # print([c.model for c in content_type]) # print all the Models avaliable in the ContentType Mode
+    
+    # content_type = ContentType.objects.filter(app_label='core') # only core apps model
+    # print([c.model for c in content_type])
+    
+    """ ContentType Methods: 
+    Together, get_object_for_this_type() and model_class() enable two extremely important use cases:
+
+    Using these methods, you can write high-level generic code that performs queries on any installed model – instead of importing and using a single specific model class, you can pass an app_label and model into a ContentType lookup at runtime, and then work with the model class or retrieve objects from it.
+    You can relate another model to ContentType as a way of tying instances of it to particular model classes, and use these methods to get access to those model classes.
+    Several of Django’s bundled applications make use of the latter technique. For example, the permissions system in Django’s authentication framework uses a Permission model with a foreign key to ContentType; this lets Permission represent concepts like “can add blog entry” or “can delete news story”.
+    
+    ContentType.model_class()
+    Returns the model class represented by this ContentType instance.
+    """
+    # content_type = ContentType.objects.get(
+    #     app_label='core', model='restuarants'
+    #     )
+    # Sale_model = content_type.model_class()
+    # print(Sale_model)
+    # print(Sale_model.objects.all())
+    
+    
+    """
+    ContentType.get_object_for_this_type(**kwargs)
+    Takes a set of valid lookup arguments for the model the ContentType represents, and does a get() lookup on that model, returning the corresponding object.
+    """
+    # content_type = ContentType.objects.get(
+    #     app_label='core', model='restuarants'
+    #     )
+    # # print(content_type)
+    # restuarant_model = content_type.get_all_objects_for_this_type(name='Golden Dragon')
+    # print(restuarant_model)
+    # # import pdb;pdb.set_trace()
+    # print(restuarant_model[0].latitude)
+    
+    """ ContentTypeManager """
+    """
+    get_for_model(model, for_concrete_model=True)
+    Takes either a model class or an instance of a model, and returns the ContentType instance representing that model. for_concrete_model=False allows fetching the ContentType of a proxy model 
+    """
+    content_type_rating = ContentType.objects.get_for_model(Rating)
+    print(content_type_rating.app_label) # core
+    c = content_type_rating.model_class()
+    print(c) # <class 'core.models.Rating'>
