@@ -2,10 +2,11 @@ from typing import Any
 from django.db import models
 from django.contrib.auth.models import User # will use the Build-In Model
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.db.models.functions import Lower
+from django.db.models import Q
 
 """ We are gointg to create 4 models: 
     # Restuarants
@@ -46,6 +47,7 @@ class Restuarants(models.Model):
     # for handling Null Values in DB
     capacity = models.PositiveSmallIntegerField(null=True, blank=True)
     nickname = models.CharField(max_length=200, null=True, blank=True)
+    comments = GenericRelation("Comment", related_query_name='restuarant')
     
     # class Meta:
     #     """ here wo do by defualt ordering with lower case name """
@@ -85,7 +87,18 @@ class Rating(models.Model):
     rating = models.PositiveSmallIntegerField(
         validators = [MinValueValidator(1), MaxValueValidator(5)]
     )
-
+    comments = GenericRelation("Comment") # Use for Generic relation
+    
+    """ For Constraints """
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                name='rating_value_valid',
+                check=Q(rating__gte=1, rating__lte=5),
+                violation_error_message='Rating invalid, must be fall between 1 to 5',
+            )
+        ]
+    
     def __str__(self):
         return f"Rating {self.rating}"
 

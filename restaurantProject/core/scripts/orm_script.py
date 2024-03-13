@@ -800,10 +800,54 @@ def run():
         """
     
     """ Another Example """
-    comment = Comment.objects.first()
-    ctype = comment.content_type # get the store content_type
-    print(ctype) # Output: Core | restuarants
-    # from the content type, fetch the associate generic FK instance
-    model = ctype.get_object_for_this_type(pk=comment.object_id)
-    print(model) # Output: Bombay Bustle
-    print(type(model)) # Output: <class 'core.models.Restuarants'>
+    # comment = Comment.objects.first()
+    # print(comment.content_object) # Output: Bombay Bustle
+    # ctype = comment.content_type # get the store content_type
+    # print(ctype) # Output: Core | restuarants
+    # # from the content type, fetch the associate generic FK instance
+    # model = ctype.get_object_for_this_type(pk=comment.object_id)
+    # print(model) # Output: Bombay Bustle
+    # print(type(model)) # Output: <class 'core.models.Restuarants'>
+    
+    """ Create a Comment to give to a specific restuarant """
+    # restuarant = Restuarants.objects.first()
+    # comment = Comment.objects.create(
+    #     comment_text = 'Awful restuarant', content_object=restuarant
+    # )
+    # print(comment)
+    # print(comment.__dict__)
+    
+    """ Use GenericRelation """
+    # restuarant = Restuarants.objects.get(pk=31)
+    # comment = restuarant.comments.all()
+    # print(comment) # Output: <QuerySet [<Comment: Comment object (4)>, <Comment: Comment object (5)>]>
+    
+    """ Use Many to Many Manager"""
+    # restuarant = Restuarants.objects.get(pk=31)
+    # restuarant.comments.add(
+    #     Comment.objects.create(comment_text='Testing comment 1', content_object=restuarant)
+    # )
+    # print(restuarant.comments.count()) # Output: 4
+    
+    """ Remove last comment for the restuarant """
+    # last_comment = restuarant.comments.last()
+    # restuarant.comments.remove(last_comment)
+    # print(restuarant.comments.count()) # Output: 3
+    
+    """ filter to checkthe comment of INDIAN Restuarant """
+    # comments = Comment.objects.filter(
+    #     restuarant__restuarant_type=Restuarants.TypeChoices.INDIAN
+    # )
+    # print(comments)
+    
+    """ Django Constraints """
+    """ Checking Constraints """
+    restuarant = Restuarants.objects.first()
+    user = User.objects.first()
+    
+    rating = Rating.objects.create(
+        restuarant=restuarant,
+        user = user,
+        rating=5124
+    )
+    print(rating)
