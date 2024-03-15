@@ -848,6 +848,6 @@ def run():
     rating = Rating.objects.create(
         restuarant=restuarant,
         user = user,
-        rating=5124
+        rating=5124 # Without check this rating will be store else error
     )
     print(rating)

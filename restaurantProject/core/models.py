@@ -34,7 +34,11 @@ class Restuarants(models.Model):
         SPANISH = "SPN", "Spanish"
         OTHER = "OTR", "Other Food"    
     
-    name = models.CharField(max_length=100, validators=[restuarant_name_begin_with_a]) # name startswith a
+    name = models.CharField(
+        max_length=100, 
+        validators=[restuarant_name_begin_with_a], # name startswith a
+        unique=True # Unique Constraints
+    ) 
     website = models.URLField(default="")
     date_opened = models.DateField()
     latitude = models.FloatField(
@@ -53,6 +57,20 @@ class Restuarants(models.Model):
     #     """ here wo do by defualt ordering with lower case name """
     #     ordering = [Lower('date_opened')]
     #     get_latest_by = 'date_opened' # by defualt show the last value ordered by date_opened
+    
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                name='latitude_valid',
+                check=Q(latitude__gte=-90, latitude__lte=90),
+                violation_error_message='Latitude invalid, must be fall between -90 to +90',
+            ),
+            models.CheckConstraint(
+                name='longitude_valid',
+                check=Q(longitude__gte=-180, longitude__lte=180),
+                violation_error_message='longitude invalid, must be fall between -90 to +90',
+            )
+        ]
     
     def __str__(self):
         return self.name
